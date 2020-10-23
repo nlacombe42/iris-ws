@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iris-ws
+  labels:
+    app: iris-ws
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: iris-ws
+  template:
+    metadata:
+      labels:
+        app: iris-ws
+    spec:
+      containers:
+        - name: iris-ws
+          image: gcr.io/nlacombe-net-prod/iris-ws
+          env:
+            - name: PORT
+              value: "80"
+          ports:
+            - containerPort: 80
+          resources:
+              requests:
+                  cpu: 50m
+                  memory: 300Mi
+              limits:
+                  cpu: 200m
+                  memory: 500Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: iris-ws
+spec:
+  selector:
+    app: iris-ws
+  ports:
+    - port: 80
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: iris-ws
+  annotations:
+    kubernetes.io/ingress.class: traefik
+    traefik.ingress.kubernetes.io/frontend-entry-points: https
+spec:
+  rules:
+    - host: nlacombe.net
+      http:
+        paths:
+          - backend:
+              serviceName: iris-ws
+              servicePort: 80
